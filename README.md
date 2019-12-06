@@ -10,8 +10,9 @@
 - [x] Highest Level Class Definition
 - [x] Sub-Class Implementation
 - [x] Utility Class (Game Controller) Implementation
-- [x] Code Refactoring
-
-- [ ] Sokoban Resolving algorithm
-
 - [x] TUI Component
+
+- [x] Sokoban Resolving algorithm
+
+- [ ] Auto-Resolving algorithm Improvement: Optimization
+- [ ] Code Refactoring

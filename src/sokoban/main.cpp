@@ -1,6 +1,6 @@
 #include "GameController.h"
 
-int main()
+int main(void)
 {
 	PushBox pushBox;
 	GameViewer gameViewer(&pushBox);
@@ -35,7 +35,7 @@ int main()
 			break;
 		case 'a':
 		case 'A':
-			gameController.autoResolve();
+			gameController.doAuto();
 			break;
 		case 'q':
 		case 'Q':
@@ -45,9 +45,11 @@ int main()
 		bool t = gameController.postProcessing();
 		if (t)
 			goto end;
-	}
+	} // end while
+
 end:
 	gameController.gameDelete();
 
 	return 0;
-}
+
+} // end main

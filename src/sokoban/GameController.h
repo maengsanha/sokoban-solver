@@ -2,6 +2,9 @@
 #define _GAMECONTROLLER_H_
 
 #include "GameViewer.h"
+#include<queue>
+#include<map>
+
 
 class GameController
 {
@@ -18,8 +21,8 @@ public:
 	void setGoalPos(vector<Coordinates> goalposition);
 	void gameInitialize();
 	void gameDelete();
-	bool IsinMapNow();
-	bool IsinMapNow(int dy, int dx);
+	bool isInMapNow();
+	bool isInMapNow(int dy, int dx);
 	bool CheckPosition(Coordinates userPos);
 	void move(Coordinates userPos);
 	bool postProcessing();
@@ -30,11 +33,18 @@ public:
 	void autoResolve();
 	void startGame();
 	bool showResult();
+	
+	//auto resolve method
+	void run(vector<vector<char>> mapi, int x, int y);
+	bool getSolution(vector<vector<char>> mapi, int x, int y, vector<char> sol);
+	void doAuto();
+	bool gameWin(vector<vector<char>> map);
 
 private:
-	const int FINALLEVEL = 5;
+	const int FINALLEVEL = 6;
 	PushBox *pushBox;
 	GameViewer *gameViewer;
+	vector<char> finalSol;
 };
 
 #endif

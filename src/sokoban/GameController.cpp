@@ -1,7 +1,5 @@
 #include "GameController.h"
-#include <queue>
-
-// #include <Windows.h>
+#include <unistd.h>
 
 void GameController::gameInitialize()
 {
@@ -38,9 +36,8 @@ void GameController::gameInitialize()
 	{
 		char temp = getch();
 		if (temp != 's' && temp != 'S')
-		{
 			continue;
-		}
+
 		else
 			break;
 	}
@@ -101,7 +98,6 @@ void GameController::setGoalPos(vector<Coordinates> goalList)
 
 void GameController::move(Coordinates userposition)
 {
-	pushBox->addStep();
 
 	int curX = pushBox->getX_userPos();
 	int curY = pushBox->getY_userPos();
@@ -110,7 +106,13 @@ void GameController::move(Coordinates userposition)
 	int nextY = curY + userposition.y;
 
 	if (pushBox->getMap(nextY, nextX) == WALL)
+	{
 		return;
+	}
+	else
+	{
+		pushBox->addStep();
+	}
 
 	// When pushes the Box
 	if (pushBox->getMap(nextY, nextX) == BOX)
@@ -280,158 +282,463 @@ void GameController::autoResolve()
 
 	// Get Goals' position
 	vector<Coordinates> goals = pushBox->getGoalList();
-
-	int goalPosX = goals[0].x;
-	int goalPosY = goals[0].y;
-
-	// Get Boxs' position
-	int boxPosX, boxPosY;
-
-	for (int i = 0; i < pushBox->getCol(); i++)
-		for (int j = 0; j < pushBox->getRow(); j++)
-			if (pushBox->getMap(i, j) == BOX)
-				boxPosX = j, boxPosY = i;
-
-	int moveBoxX = goalPosX - boxPosX, moveBoxY = goalPosY - boxPosY;
-
-	for (int i = 0; i < abs(moveBoxX); i++)
+  
+	int goalsize = 0;
+	while (goalsize != goals.size())
 	{
-		if (moveBoxX > 0)
-			routes.push('r');
-		else
-			routes.push('l');
-	}
+		int goalPosX = goals[goalsize].x;
+		int goalPosY = goals[goalsize].y;
+		goalsize++;
+		// Get Boxs' position
+		int boxPosX, boxPosY;
 
-	for (int i = 0; i < abs(moveBoxY); i++)
-	{
-		if (moveBoxY > 0)
-			routes.push('d');
-		else
-			routes.push('u');
-	}
-
-	char buf[128];
-	// sprintf_s(buf, "??? ??... x=%d y=%d gx=%d gy=%d", boxPosX, boxPosY, goalPosX, goalPosY);
-	// OutputDebugString(buf);
-	while (!routes.empty())
-	{
-		char direction = routes.front();
-		routes.pop();
-		int playerPosX = pushBox->getX_userPos(), playerPosY = pushBox->getY_userPos();
-		char buf[128];
-		// sprintf_s(buf, "??? ??... px=%d py=%d bx=%d by=%d gx=%d gy=%d key=%c \n", playerPosX, playerPosY, boxPosX, boxPosY, goalPosX, goalPosY, direction);
-		// OutputDebugString(buf);
 		for (int i = 0; i < pushBox->getCol(); i++)
 			for (int j = 0; j < pushBox->getRow(); j++)
 				if (pushBox->getMap(i, j) == BOX)
 					boxPosX = j, boxPosY = i;
-		switch (direction)
+
+		int moveBoxX = goalPosX - boxPosX, moveBoxY = goalPosY - boxPosY;
+
+		for (int i = 0; i < abs(moveBoxX); i++)
 		{
-			// Get Player's position
+			if (moveBoxX > 0)
+				routes.push('r');
+			else
+				routes.push('l');
+		}
 
-		case 'u':
-			// set Player to Box's down position, move Up
-			if (playerPosX != boxPosX || playerPosY != boxPosY + 1)
+		for (int i = 0; i < abs(moveBoxY); i++)
+		{
+			if (moveBoxY > 0)
+				routes.push('d');
+			else
+				routes.push('u');
+		}
+
+		char buf[128];
+		//sprintf_s(buf, "�޴� ��... x=%d y=%d gx=%d gy=%d", boxPosX, boxPosY, goalPosX, goalPosY);
+		//OutputDebugString(buf);
+		while (!routes.empty())
+		{
+			char direction = routes.front();
+			routes.pop();
+			int playerPosX = pushBox->getX_userPos(), playerPosY = pushBox->getY_userPos();
+			char buf[128];
+			//sprintf_s(buf, "�޴� ��... px=%d py=%d bx=%d by=%d gx=%d gy=%d key=%c \n", playerPosX, playerPosY, boxPosX, boxPosY, goalPosX, goalPosY, direction);
+			//OutputDebugString(buf);
+			for (int i = 0; i < pushBox->getCol(); i++)
+				for (int j = 0; j < pushBox->getRow(); j++)
+					if (pushBox->getMap(i, j) == BOX)
+						boxPosX = j, boxPosY = i;
+			switch (direction)
 			{
-				int movePlayerX = boxPosX - playerPosX, movePlayerY = boxPosY + 1 - playerPosY;
+				// Get Player's position
 
-				for (int i = 0; i < abs(movePlayerY); i++)
+			case 'u':
+				// set Player to Box's down position, move Up
+				if (playerPosX != boxPosX || playerPosY != boxPosY + 1)
 				{
-					if (movePlayerY > 0)
-						move(Coordinates(0, 1));
-					else
-						move(Coordinates(0, -1));
+					int movePlayerX = boxPosX - playerPosX, movePlayerY = boxPosY + 1 - playerPosY;
+
+					for (int i = 0; i < abs(movePlayerY); i++)
+					{
+						if (movePlayerY > 0)
+						{
+							move(Coordinates(0, 1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(0, -1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+
+					for (int i = 0; i < abs(movePlayerX); i++)
+					{
+						if (movePlayerX > 0)
+						{
+							move(Coordinates(1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(-1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+				}
+				move(Coordinates(0, -1));
+				gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+				usleep(300 * 1000);
+				break;
+
+			case 'd':
+				// set Player to Box's up position, move Down
+				if (playerPosX != boxPosX || playerPosY != boxPosY - 1)
+				{
+					int movePlayerX = boxPosX - playerPosX, movePlayerY = boxPosY - 1 - playerPosY;
+					for (int i = 0; i < abs(movePlayerX); i++)
+					{
+						if (movePlayerX > 0)
+						{
+							move(Coordinates(1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(-1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+
+					for (int i = 0; i < abs(movePlayerY); i++)
+					{
+						if (movePlayerY > 0)
+						{
+							move(Coordinates(0, 1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(0, -1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+				}
+				move(Coordinates(0, 1));
+				gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+				usleep(300 * 1000);
+				break;
+
+			case 'r':
+				// set Player to Box's left position, move Right
+				if (playerPosX != boxPosX - 1 || playerPosY != boxPosY)
+				{
+					int movePlayerX = boxPosX - 1 - playerPosX, movePlayerY = boxPosY - playerPosY;
+					for (int i = 0; i < abs(movePlayerX); i++)
+					{
+						if (movePlayerX > 0)
+						{
+							move(Coordinates(1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(-1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+
+					for (int i = 0; i < abs(movePlayerY); i++)
+					{
+						if (movePlayerY > 0)
+						{
+							move(Coordinates(0, 1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(0, -1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+				}
+				move(Coordinates(1, 0));
+				gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+				usleep(300 * 1000);
+				break;
+
+			case 'l':
+				// set Player to Box's right position, move Left
+				if (playerPosX != boxPosX + 1 || playerPosY != boxPosY)
+				{
+					int movePlayerX = boxPosX + 1 - playerPosX, movePlayerY = boxPosY - playerPosY;
+
+					for (int i = 0; i < abs(movePlayerX); i++)
+					{
+						if (movePlayerX > 0)
+						{
+							move(Coordinates(1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(-1, 0));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
+
+					for (int i = 0; i < abs(movePlayerY); i++)
+					{
+						if (movePlayerY > 0)
+						{
+							move(Coordinates(0, 1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+						else
+						{
+							move(Coordinates(0, -1));
+							gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+							usleep(300 * 1000);
+						}
+					}
 				}
 
-				for (int i = 0; i < abs(movePlayerX); i++)
-				{
-					if (movePlayerX > 0)
-						move(Coordinates(1, 0));
+				move(Coordinates(-1, 0));
+				gameViewer->renderAll(levelBoard, stepBoard, pushBoard, resetBoard, gameBoard);
+				usleep(300 * 1000);
+				break;
+			}
+		}
+	}
+}
 
-					else
-						move(Coordinates(-1, 0));
+bool GameController::getSolution(vector<vector<char>> mapi, int x, int y, vector<char> soli)
+{
+	queue <pair <pair <vector <vector<char>>, vector<char>>, pair<int, int>>> q;
+	pair <pair <vector<vector<char>>, vector<char>>,pair<int, int>> initial;
+
+	initial.first.first = mapi;
+	initial.first.second = soli;
+	initial.second.first = x;
+	initial.second.second = y;
+	
+	q.push(initial);
+	map<pair<vector<vector<char>>, pair<int , int>>, bool> visited;
+	while(!q.empty())
+	{
+		pair<pair<vector<vector<char>>, vector<char>>, pair<int, int>> top = q.front();
+		vector<vector<char>> map = top.first.first;
+		vector<char> sol = top.first.second;
+		int userX = top.second.first;
+		int userY = top.second.second;
+
+		q.pop();
+		if(gameWin(map))
+		{
+			finalSol = sol;
+			return true;
+		}
+
+		pair<vector<vector<char>>, pair<int ,int>> vi;
+		vi.first = map;
+		vi.second.first = userX;
+		vi.second.second = userY;
+		if(visited[vi])
+		{
+			continue;
+		}
+
+		visited[vi] = true;
+		//Right
+		if(userX < 9)
+		{
+			if(map[userY][userX + 1] != WALL)
+			{
+				if(map[userY][userX+1] == BOX)
+				{
+					if(userX < 8)
+					{
+						if(map[userY][userX+2] != WALL && map[userY][userX+2] != BOX)
+						{
+							swap(map[userY][userX+1], map[userY][userX+2]);
+							if(!visited[make_pair(map, make_pair(userX+1, userY))])
+							{
+								sol.push_back('R');
+								q.push(make_pair(make_pair(map, sol), make_pair(userX+1, userY)));
+								sol.pop_back();
+							}
+							swap(map[userY][userX+1], map[userY][userX+2]);
+						}
+					}
+				} else
+				{
+					if(!visited[make_pair(map, make_pair(userX+1, userY))])
+					{
+						sol.push_back('R');
+						q.push(make_pair(make_pair(map, sol), make_pair(userX+1, userY)));
+						sol.pop_back();
+					}
 				}
 			}
-			move(Coordinates(0, -1));
-			break;
-
-		case 'd':
-			// set Player to Box's up position, move Down
-			if (playerPosX != boxPosX || playerPosY != boxPosY - 1)
+		}
+		//Left
+		if(userX > 0)
+		{
+			if(map[userY][userX - 1] != WALL)
 			{
-				int movePlayerX = boxPosX - playerPosX, movePlayerY = boxPosY - 1 - playerPosY;
-				for (int i = 0; i < abs(movePlayerX); i++)
+				if(map[userY][userX-1] == BOX)
 				{
-					if (movePlayerX > 0)
-						move(Coordinates(1, 0));
-					else
-						move(Coordinates(-1, 0));
-				}
-
-				for (int i = 0; i < abs(movePlayerY); i++)
+					if(userX > 1)
+					{
+						if(map[userY][userX-2] != WALL && map[userY][userX-2] != BOX)
+						{
+							swap(map[userY][userX-1], map[userY][userX-2]);
+							if(!visited[make_pair(map, make_pair(userX-1, userY))])
+							{
+								sol.push_back('L');
+								q.push(make_pair(make_pair(map, sol), make_pair(userX-1, userY)));
+								sol.pop_back();
+							}
+							swap(map[userY][userX-1], map[userY][userX-2]);
+						}
+					}
+				} else
 				{
-					if (movePlayerY > 0)
-						move(Coordinates(0, 1));
-					else
-						move(Coordinates(0, -1));
+					if(!visited[make_pair(map, make_pair(userX-1, userY))])
+					{
+						sol.push_back('L');
+						q.push(make_pair(make_pair(map, sol), make_pair(userX-1, userY)));
+						sol.pop_back();
+					}
 				}
 			}
-			move(Coordinates(0, 1));
-			break;
-
-		case 'r':
-			// set Player to Box's left position, move Right
-			if (playerPosX != boxPosX - 1 || playerPosY != boxPosY)
+		}
+		//UP
+		if(userY > 0)
+		{
+			if(map[userY-1][userX] != WALL)
 			{
-				int movePlayerX = boxPosX - 1 - playerPosX, movePlayerY = boxPosY - playerPosY;
-				for (int i = 0; i < abs(movePlayerX); i++)
+				if(map[userY-1][userX] == BOX)
 				{
-					if (movePlayerX > 0)
-						move(Coordinates(1, 0));
-					else
-						move(Coordinates(-1, 0));
-				}
-
-				for (int i = 0; i < abs(movePlayerY); i++)
+					if(userX > 1)
+					{
+						if(map[userY-2][userX] != WALL && map[userY-2][userX] != BOX)
+						{
+							
+							swap(map[userY-1][userX], map[userY-2][userX]);
+							if(!visited[make_pair(map, make_pair(userX, userY-1))])
+							{
+								sol.push_back('U');
+								q.push(make_pair(make_pair(map, sol), make_pair(userX, userY-1)));
+								sol.pop_back();
+							}
+							swap(map[userY-1][userX], map[userY-2][userX]);
+						}
+					}
+				} else
 				{
-					if (movePlayerY > 0)
-						move(Coordinates(0, 1));
-					else
-						move(Coordinates(0, -1));
+					if(!visited[make_pair(map, make_pair(userX, userY-1))])
+					{
+						sol.push_back('U');
+						q.push(make_pair(make_pair(map, sol), make_pair(userX, userY-1)));
+						sol.pop_back();
+					}
 				}
 			}
-			move(Coordinates(1, 0));
-			break;
+		}
 
-		case 'l':
-			// set Player to Box's right position, move Left
-			if (playerPosX != boxPosX + 1 || playerPosY != boxPosY)
+		//DOWN
+		if(userY < 9)
+		{
+			if(map[userY+1][userX] != WALL)
 			{
-				int movePlayerX = boxPosX + 1 - playerPosX, movePlayerY = boxPosY - playerPosY;
-
-				for (int i = 0; i < abs(movePlayerX); i++)
+				if(map[userY+1][userX] == BOX)
 				{
-					if (movePlayerX > 0)
-						move(Coordinates(1, 0));
-					else
-						move(Coordinates(-1, 0));
-				}
-
-				for (int i = 0; i < abs(movePlayerY); i++)
+					if(userY < 8)
+					{
+						if(map[userY+2][userX] != WALL && map[userY+2][userX] != BOX)
+						{
+							swap(map[userY+1][userX], map[userY+2][userX]);
+							if(!visited[make_pair(map, make_pair(userX, userY+1))])
+							{
+								sol.push_back('D');
+								q.push(make_pair(make_pair(map, sol), make_pair(userX, userY+1)));
+								sol.pop_back();
+							}
+							swap(map[userY+1][userX], map[userY+2][userX]);
+						}
+					}
+				} else
 				{
-					if (movePlayerY > 0)
-						move(Coordinates(0, 1));
-					else
-						move(Coordinates(0, -1));
+					if(!visited[make_pair(map, make_pair(userX, userY+1))])
+					{
+						sol.push_back('D');
+						q.push(make_pair(make_pair(map, sol), make_pair(userX, userY+1)));
+						sol.pop_back();
+					}
 				}
 			}
-			move(Coordinates(-1, 0));
-			break;
+		}
+	}
 
-		default:
-			break;
+	return false;
+}
 
-		} // end swtich
+void GameController::run(vector<vector<char>> mapi, int x, int y)
+{
+	mapi.resize(pushBox -> getCol());
+	for(int i = 0; i < mapi.size(); i++)
+		mapi[i].resize(pushBox -> getRow());
+	
+	for(int i = 0; i < mapi.size(); i++)
+	{
+		for(int j = 0; j < mapi[i].size(); j++)
+		{
+			mapi[i][j] = pushBox -> getMap(i,j);
+		}
+	}
 
-	} // end while
+	vector<char> sol;
+	bool isGet = getSolution(mapi,x,y, sol);
+}
+
+void GameController::doAuto()
+{
+	vector<vector<char>> map;
+	run(map, pushBox -> getX_userPos(), pushBox -> getY_userPos());
+	for(int i = 0; i < finalSol.size(); i++)
+	{
+		switch(finalSol.at(i))
+		{
+			case 'R':
+				move(Coordinates(1,0));
+				break;
+			case 'L':
+				move(Coordinates(-1,0));
+				break;
+			case 'U':
+				move(Coordinates(0,-1));
+				break;
+			case 'D':
+				move(Coordinates(0,1));
+				break;
+		}
+
+		postProcessing();
+		sleep(1);
+	}
+}
+
+bool GameController::gameWin(vector<vector<char>> map)
+{
+	vector<Coordinates> goal = pushBox -> getGoalList();
+	for(int i = 0; i < goal.size(); i++)
+	{
+		int goal_x = goal[i].x;
+		int goal_y = goal[i].y;
+
+		if(map[goal_y][goal_x] == BOX)
+			continue;
+		else
+			return false;
+	}
+
+	return true;
 }
